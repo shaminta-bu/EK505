@@ -3,6 +3,7 @@ import sys
 import importlib.util
 import numpy as np
 import pickle as pkl
+import matplotlib.pyplot as plt
 from spatialmath import SE3
 from roboticstoolbox.models.URDF.Panda import Panda
 
@@ -11,87 +12,160 @@ def ikine_comparison_test(robot, targets, q0, results_filename, step_size=0.1, t
                           max_iters=1000):
     """
     Run position-only inverse kinematics on a fixed set of target positions
-    using both the gradient descent solver from Question~ q:ik gradient and
-    the Robotics Toolbox inverse kinematics method .ikine_LM. Save the
-    results to a   results_filename pickle file.
+    using both the gradient descent solver from Question code 1.1 and the
+    Robotics Toolbox inverse kinematics method .ikine_LM. Save the results to
+    a results_filename pickle file.
 
-    targets is a 3 x N array, one target position per column.
+    targets is a nb_targets x 3 array, one target position per row.
     """
 
-    q_sol_all = []
+    q0 = np.array(q0, dtype=float)
+    q_gradient = []
+    q_rtb = []
+    success_gradient = []
+    success_rtb = []
+    error_gradient = []
+    error_rtb = []
+    history_cost = []
+    history_joint = []
 
-    for p_des in targets.T:
+    for p_des in targets:
         # Run the gradient descent solver
-        q_sol, flag_status, history_cost, history_joint = ikine_position_gradient(
+        q_sol, flag_status, h_cost, h_joint = ikine_position_gradient(
             robot, p_des, q0, step_size=step_size, tol=tol, max_iters=max_iters,
             joint_limits=True)
 
-        # Run the Robotics Toolbox inverse kinematics solver (position only via mask,
-        # a single search from q0 so it is comparable to gradient descent)
+        # Run the Robotics Toolbox inverse kinematics solver. Its tol is applied
+        # to E = 0.5*||e||^2, so convert it to match tol on ||e||.
         iksol = robot.ikine_LM(SE3.Trans(p_des), q0=q0, ilimit=max_iters, slimit=1,
-                               tol=tol, mask=[1, 1, 1, 0, 0, 0], joint_limits=True)
+                               tol=0.5 * tol**2, mask=[1, 1, 1, 0, 0, 0],
+                               joint_limits=True)
 
-        # Compile results into dictionary
-        q_sol_all.append({
-            "target": p_des,
-            "q0": q0,
-            "q_ek505": q_sol,
-            "q_rtb": iksol.q,
-            "success_ek505": flag_status,
-            "success_rtb": iksol.success,
-            "residual_ek505": history_cost[-1] if len(history_cost) > 0 else None,
-            "residual_rtb": iksol.residual,
-            "history_ek505": {"cost": history_cost, "joint": history_joint},
-            })
+        q_gradient.append(q_sol)
+        q_rtb.append(iksol.q)
+        success_gradient.append(flag_status)
+        success_rtb.append(bool(iksol.success))
+        error_gradient.append(np.linalg.norm(robot.fkine(q_sol).t - p_des))
+        error_rtb.append(np.linalg.norm(robot.fkine(iksol.q).t - p_des))
+        history_cost.append(h_cost)
+        history_joint.append(h_joint)
+
+    data = {
+        "robot_name": robot.name,
+        "targets": targets,
+        "q0": q0,
+        "step_size": step_size,
+        "tol": tol,
+        "max_iters": max_iters,
+        "q_gradient": np.array(q_gradient),
+        "q_rtb": np.array(q_rtb),
+        "success_gradient": np.array(success_gradient),
+        "success_rtb": np.array(success_rtb),
+        "error_gradient": np.array(error_gradient),
+        "error_rtb": np.array(error_rtb),
+        "history_cost": history_cost,    # list of [nb_iterations] arrays, one per target
+        "history_joint": history_joint,  # list of [nb_iterations x n] arrays, one per target
+    }
 
     results_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), results_filename)
     with open(results_path, 'wb') as f:
-        pkl.dump(q_sol_all, f)
-
-    return q_sol_all
+        pkl.dump(data, f)
 
 
 def ikine_position_gradient(robot, p_des, q0, step_size=0.1, tol=1e-3, max_iters=1000,
-                            joint_limits=False):
+                            joint_limits=True):
     """
     Compute a joint configuration whose end-effector position is close to a
     desired target position by using gradient descent on the position error.
+
+    The update is q <- q - step_size * Jp^T (p(q) - p_des), the gradient of
+    0.5*||p(q) - p_des||^2. history_cost stores the position error norm.
     """
 
-    b = p_des
-    x = np.array(q0, dtype=float)
+    q_sol = np.array(q0, dtype=float)
     history_cost = []
     history_joint = []
-    flag_status = False
     if joint_limits:
         qlims = robot.qlim
 
     for _ in range(max_iters):
-        f = robot.fkine(x).t
-        err = f - b
-        cost = 0.5 * np.linalg.norm(err)**2
-        history_cost.append(cost)
-        history_joint.append(x.copy())
+        err = robot.fkine(q_sol).t - p_des
+        history_cost.append(np.linalg.norm(err))
+        history_joint.append(q_sol.copy())
         if np.linalg.norm(err) < tol:
-            flag_status = True
             break
-        grad = robot.jacob0(x)[:3, :].T @ err
-        x = x - grad * step_size
+        grad = robot.jacob0(q_sol)[:3, :].T @ err
+        q_sol = q_sol - step_size * grad
         if joint_limits:
-            x = np.clip(x, qlims[0, :], qlims[1, :])
-    q_sol = x
+            q_sol = np.clip(q_sol, qlims[0, :], qlims[1, :])
 
-    return q_sol, flag_status, history_cost, history_joint
+    flag_status = bool(np.linalg.norm(robot.fkine(q_sol).t - p_des) < tol)
+
+    return q_sol, flag_status, np.array(history_cost), np.array(history_joint)
 
 
-def random_reachable_targets(robot, nb_targets, rng):
+def scara_targets(nb_targets):
     """
-    Generate target positions (3 x nb_targets) guaranteed to be reachable by
-    taking the forward kinematics of random joint configurations within limits.
+    Sample targets (nb_targets x 3) in a cylindrical shell around the SCARA base 
+    with joint limits considered.
     """
-    qlims = robot.qlim
-    q_rand = rng.uniform(qlims[0, :], qlims[1, :], size=(nb_targets, robot.n))
-    return np.column_stack([robot.fkine(q).t for q in q_rand])
+    r_min, r_max = 0.7, 1.85
+    z_min, z_max = 0.02, 0.23
+    r = np.sqrt(r_min**2 + (r_max**2 - r_min**2) * np.random.rand(nb_targets))
+    theta = 2 * np.pi * np.random.rand(nb_targets)
+    z = z_min + (z_max - z_min) * np.random.rand(nb_targets)
+    return np.column_stack([r * np.cos(theta), r * np.sin(theta), z])
+
+
+def panda_targets(nb_targets):
+    """
+    Sample targets (nb_targets x 3) in a box in front of the Panda
+    with joint limits considered.
+    """
+    box_min = np.array([0.3, -0.4, 0.1])
+    box_max = np.array([0.7, 0.4, 0.7])
+    return box_min + (box_max - box_min) * np.random.rand(nb_targets, 3)
+
+
+def categorize(data):
+    """
+    Return boolean masks for the four success categories of Question report 1.3.
+    """
+    g = data["success_gradient"]
+    r = data["success_rtb"]
+    return {"both succeed": g & r, "gradient only": g & ~r,
+            "RTB only": ~g & r, "both fail": ~g & ~r}
+
+
+def plot_convergence(robot, data, idx):
+    """
+    Plot position error norm and joint values versus iteration for target idx,
+    with the RTB final solution shown as horizontal reference lines.
+    """
+    h_cost = data["history_cost"][idx]
+    h_joint = data["history_joint"][idx]
+    q_rtb = data["q_rtb"][idx]
+
+    fig, (ax_err, ax_q) = plt.subplots(2, 1, figsize=(8, 8), sharex=True)
+    ax_err.semilogy(h_cost, label="Gradient descent")
+    ax_err.axhline(data["error_rtb"][idx], color='C1', linestyle='--', label="RTB final")
+    ax_err.axhline(data["tol"], color='k', linestyle=':', label="tol")
+    ax_err.set_ylabel("Position error norm [m]")
+    ax_err.set_title(f"{robot.name}: target {idx} = {np.round(data['targets'][idx], 3)}")
+    ax_err.legend()
+    ax_err.grid()
+
+    for j in range(robot.n):
+        ax_q.plot(h_joint[:, j], color=f"C{j}", label=f"q{j + 1}")
+        ax_q.axhline(q_rtb[j], color=f"C{j}", linestyle='--')
+    ax_q.set_xlabel("Iteration")
+    ax_q.set_ylabel("Joint value (solid: gradient, dashed: RTB)")
+    ax_q.legend(ncol=robot.n)
+    ax_q.grid()
+
+    fig.tight_layout()
+    fig.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             f"{robot.name.lower()}_convergence.png"))
 
 
 def main():
@@ -110,17 +184,37 @@ def main():
 
     # Assign variables for testing
     nb_targets = 20
-    rng = np.random.default_rng(0)
+    np.random.seed(0)
 
     # Run tests
-    for robot, results_filename in [(panda, "panda_results.pkl"),
-                                    (scara, "scara_results.pkl")]:
+    for robot, sample_targets, results_filename in [
+            (scara, scara_targets, "scara_ik_results.pkl"),
+            (panda, panda_targets, "panda_ik_results.pkl")]:
         q0 = np.zeros(robot.n)  # initial guess
-        p_targets = random_reachable_targets(robot, nb_targets, rng)  # 3 rows, 20 columns
-        results = ikine_comparison_test(robot, p_targets, q0, results_filename)
-        n_ek505 = sum(r["success_ek505"] for r in results)
-        n_rtb = sum(r["success_rtb"] for r in results)
-        print(f"{robot.name}: gradient {n_ek505}/{nb_targets}, ikine_LM {n_rtb}/{nb_targets}")
+        targets = sample_targets(nb_targets)
+        ikine_comparison_test(robot, targets, q0, results_filename)
+
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               results_filename), 'rb') as f:
+            data = pkl.load(f)
+
+        # Success table
+        print(f"\n{robot.name}")
+        categories = categorize(data)
+        for name, mask in categories.items():
+            print(f"  {name:14s} {100 * mask.sum() / nb_targets:5.1f}%")
+
+        # Average final position error where both methods succeed
+        both = categories["both succeed"]
+        if both.any():
+            print(f"  avg final error gradient: {data['error_gradient'][both].mean():.3e} m")
+            print(f"  avg final error RTB:      {data['error_rtb'][both].mean():.3e} m")
+
+        # Convergence plots for one representative target (first where both succeed)
+        if both.any():
+            plot_convergence(robot, data, int(np.flatnonzero(both)[0]))
+
+    plt.show()
 
 
 if __name__ == '__main__':

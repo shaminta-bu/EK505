@@ -1,0 +1,16 @@
+name: ek505
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ipykernel
+  - casadi
+  - cvxpy
+  - mujoco
+  - ompl
+  - gtsam
+  - mediapy
+  - icecream
+  - pytest
+  - pylint
+prefix: /Users/tron/miniforge3/envs/ek505
