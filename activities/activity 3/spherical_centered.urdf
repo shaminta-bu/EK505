@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<robot name="spherical_robot">
+
+  <!-- ======================================================================= -->
+  <!-- MATERIALS                                                               -->
+  <!-- ======================================================================= -->
+  <material name="red">
+    <color rgba="1.0 0.0 0.0 1.0"/>
+  </material>
+
+  <material name="green">
+    <color rgba="0.0 1.0 0.0 1.0"/>
+  </material>
+
+  <material name="blue">
+    <color rgba="0.0 0.0 1.0 1.0"/>
+  </material>
+
+  <!-- ======================================================================= -->
+  <!-- LINKS                                                                   -->
+  <!-- ======================================================================= -->
+
+  <!-- Red Box-Like Inertial Base -->
+  <link name="base_link">
+    <visual>
+      <!-- Offset center up so the base sits on the ground floor -->
+      <origin xyz="0.0 0.0 0.1" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.4 0.4 0.2"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.1" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.4 0.4 0.2"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.1" rpy="0.0 0.0 0.0"/>
+      <mass value="2.0"/>
+      <!-- Solid box inertia calculations -->
+      <inertia ixx="0.03333" ixy="0.0" ixz="0.0" iyy="0.03333" iyz="0.0" izz="0.05333"/>
+    </inertial>
+  </link>
+
+  <!-- Green Short Cylindrical Link -->
+  <link name="green_link">
+    <visual>
+      <!-- Offset cylinder visual center by half its length -->
+      <origin xyz="0.0 0.0 0.075" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder radius="0.08" length="0.15"/>
+      </geometry>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.075" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder radius="0.08" length="0.15"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.075" rpy="0.0 0.0 0.0"/>
+      <mass value="0.5"/>
+      <!-- Cylinder inertia calculations -->
+      <inertia ixx="0.00174" ixy="0.0" ixz="0.0" iyy="0.00174" iyz="0.0" izz="0.0016"/>
+    </inertial>
+  </link>
+
+  <!-- Blue Square-Cross-Sectioned Long Link -->
+  <link name="blue_link">
+    <visual>
+      <!-- Shift visual origin up so its bottom end sits directly on the joint -->
+      <origin xyz="0.0 0.0 0.4" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.05 0.05 0.8"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.4" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.05 0.05 0.8"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.4" rpy="0.0 0.0 0.0"/>
+      <mass value="0.5"/>
+      <!-- Long box inertia calculations -->
+      <inertia ixx="0.02677" ixy="0.0" ixz="0.0" iyy="0.02677" iyz="0.0" izz="0.00021"/>
+    </inertial>
+  </link>
+
+  <!-- Blue Square-Cross-Sectioned Long Link -->
+  <link name="ee_link">
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <sphere radius="0"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <sphere radius="0"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="0"/>
+      <!-- Long box inertia calculations -->
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+
+
+  <!-- ======================================================================= -->
+  <!-- JOINTS                                                                  -->
+  <!-- ======================================================================= -->
+
+  <!-- First Joint (Z-Axis, coaxial on top of the base box) -->
+  <joint name="base_to_green" type="revolute">
+    <parent link="base_link"/>
+    <child link="green_link"/>
+    <!-- Positioned at the top surface of the red base -->
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <limit lower="-3.1416" upper="3.1416" effort="10.0" velocity="1.0"/>
+  </joint>
+
+  <!-- Second Joint (Horizontal Y-Axis, on top of the green cylinder) -->
+  <joint name="green_to_blue" type="revolute">
+    <parent link="green_link"/>
+    <child link="blue_link"/>
+    <!-- Positioned at the top surface of the green cylinder -->
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="10.0" velocity="1.0"/>
+  </joint>
+
+  <joint name="blue_to_ee" type="fixed">
+    <origin xyz="0 0 0.8" rpy="0 0 0" />
+    <parent link="blue_link" />
+    <child link="ee_link" />
+  </joint>
+
+</robot>

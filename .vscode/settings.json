@@ -1,0 +1,18 @@
+{
+  "files.autoSave": "afterDelay",
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "files.exclude": {
+    "**/.DS_Store": true
+  },
+  "python.defaultInterpreterPath": "C:\\Users\\shamidian\\AppData\\Local\\miniforge3\\envs\\ek505\\python.exe",
+  "python.terminal.activateEnvironment": true,
+  "python.analysis.extraPaths": [
+    "C:\\Users\\shamidian\\AppData\\Local\\miniforge3\\envs\\ek505\\Lib\\site-packages"
+  ],
+  "jupyter.kernels.excludePythonEnvironments": [],
+  "python.envFile": "${workspaceFolder}\\.env",
+  "python.terminal.useEnvFile": true,
+  "python-envs.defaultEnvManager": "ms-python.python:conda",
+  "python-envs.defaultPackageManager": "ms-python.python:conda"
+}

@@ -1,0 +1,39 @@
+{
+    "name": "ROS 2 Zenoh Environment",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/desktop-lite:1": {
+            "password": "ros"
+        }
+    },
+    "forwardPorts": [6080, 5901],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-iot.vscode-ros",
+                "ms-vscode.cpptools",
+                "ms-python.python"
+            ],
+            "settings": {
+                "remote.portsAttributes": {
+                    "7447": {
+                        "onAutoForward": "ignore",
+                        "elevateIfNeeded": false
+                    }
+                }
+            }
+        }
+    },
+    "remoteUser": "root", 
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "containerEnv": {
+        "ROS_LOCALHOST_ONLY": "0",
+        "ROS_DOMAIN_ID": "0",
+        "RMW_IMPLEMENTATION": "rmw_cyclonedds_cpp"
+    },
+    "postAttachCommand": "echo -e '\\n\\n   DEVCONTAINER READY, use connect-zenoh in another terminal to start receiving ROS2 topics    \\n   To start noVNC GUI, run: start-vnc                             \\n'"
+}
