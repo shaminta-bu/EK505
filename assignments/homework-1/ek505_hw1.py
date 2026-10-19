@@ -2,9 +2,13 @@
 Forward-kinematics tests and Swift animation demo for the EK505 homework robots.
 '''
 
+import os
+import sys
 import numpy as np
 import swift
 
+# Robot models are shared across assignments in ../staples
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'staples'))
 import ek505_models as models
 import ek505_utilities as utilities
 

@@ -29,16 +29,21 @@ def ikine_comparison_test(robot, targets, q0, results_filename, step_size=0.1, t
     history_cost = []
     history_joint = []
 
+    # Both methods must use the same tolerance on the position error norm ||e||.
+    # RTB's tol bounds E = 0.5*||e||^2 instead, so convert it:
+    # ||e|| < tol  <=>  0.5*||e||^2 < 0.5*tol^2  (e.g., 1 mm -> 5e-7).
+    tol_rtb = 0.5 * tol**2
+
     for p_des in targets:
         # Run the gradient descent solver
         q_sol, flag_status, h_cost, h_joint = ikine_position_gradient(
             robot, p_des, q0, step_size=step_size, tol=tol, max_iters=max_iters,
             joint_limits=True)
 
-        # Run the Robotics Toolbox inverse kinematics solver. Its tol is applied
-        # to E = 0.5*||e||^2, so convert it to match tol on ||e||.
-        iksol = robot.ikine_LM(SE3.Trans(p_des), q0=q0, ilimit=max_iters, slimit=1,
-                               tol=0.5 * tol**2, mask=[1, 1, 1, 0, 0, 0],
+        # Run the Robotics Toolbox inverse kinematics solver. The first search
+        # starts from q0; later searches (restarts) use random configurations.
+        iksol = robot.ikine_LM(SE3.Trans(p_des), q0=q0, ilimit=max_iters,
+                               tol=tol_rtb, mask=[1, 1, 1, 0, 0, 0],
                                joint_limits=True)
 
         q_gradient.append(q_sol)
@@ -56,6 +61,7 @@ def ikine_comparison_test(robot, targets, q0, results_filename, step_size=0.1, t
         "q0": q0,
         "step_size": step_size,
         "tol": tol,
+        "tol_rtb": tol_rtb,  # tol converted to RTB's 0.5*||e||^2 error measure
         "max_iters": max_iters,
         "q_gradient": np.array(q_gradient),
         "q_rtb": np.array(q_rtb),
@@ -172,7 +178,7 @@ def main():
 
     # Import SCARA model
     models_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               '..', 'homework-1', 'ek505_models.py')
+                               '..', 'staples', 'ek505_models.py')
     spec = importlib.util.spec_from_file_location("models", models_path)
     models = importlib.util.module_from_spec(spec)
     sys.modules["models"] = models

@@ -4,7 +4,7 @@ from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
 
-file_list = ['ek505_models.py', 'ek505_ik.py']
+file_list = ['../staples/ek505_models.py', 'ek505_ik.py']
 file_out_basename = 'homework2'
 
 # Initialize contents of the final HTML file with the HTML header
