@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
+import os
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
 
 file_list = ['../staples/ek505_models.py', 'ek505_ik.py']
 file_out_basename = 'homework2'
+
+# Resolve paths relative to this script, so it can be run from any folder
+here = os.path.dirname(os.path.abspath(__file__))
 
 # Initialize contents of the final HTML file with the HTML header
 contents = [
@@ -21,9 +25,9 @@ formatter = HtmlFormatter()
 # Add the formatted contents of each py file with a title
 for file_name in file_list:
     contents += [
-        '<h1>' + file_name + '</h1>',
+        '<h1>' + os.path.basename(file_name) + '</h1>',
     ]
-    with open(file_name, 'rt') as f_in:
+    with open(os.path.join(here, file_name), 'rt') as f_in:
         formatted_code = highlight(f_in.read(), lexer, formatter)
         contents += [formatted_code]
 
@@ -31,10 +35,10 @@ for file_name in file_list:
 contents += ['</body>', '</html>']
 
 # Write out the HTML and CSS files
-with open(file_out_basename + '.html', 'wt') as f_out:
+with open(os.path.join(here, file_out_basename + '.html'), 'wt') as f_out:
     f_out.write('\n'.join(contents))
     print('Generated', file_out_basename + '.html', 'containing', file_list)
 
-with open(file_out_basename + '.css', 'wt') as f_out:
+with open(os.path.join(here, file_out_basename + '.css'), 'wt') as f_out:
     f_out.write(formatter.get_style_defs())
     print('Generated', file_out_basename + '.css')

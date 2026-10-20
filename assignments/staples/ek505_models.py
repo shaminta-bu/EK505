@@ -18,9 +18,9 @@ def scara_fkine(q_input):
     '''
 
     pose = (SE3(0, 0, 0.3) * SE3.Rz(q_input[0])
-            * SE3(0.92, 0, 0.08) * SE3.Rz(q_input[1])
-            * SE3(1.025, 0, 0.08 - q_input[2])
-            * SE3(0, 0, -0.46))
+            * SE3(0.90, 0, 0.08) * SE3.Rz(q_input[1])
+            * SE3(1.02, 0, 0.08) * SE3.Tz(q_input[2])
+            * SE3(0, 0, -0.45))
     return pose
 
 

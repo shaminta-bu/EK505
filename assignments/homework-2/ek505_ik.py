@@ -1,8 +1,13 @@
+'''
+Gradient descent position-only inverse kinematics, and its comparison with the
+Robotics Toolbox .ikine_LM() solver on the SCARA and Panda robots.
+'''
+
 import os
 import sys
 import importlib.util
-import numpy as np
 import pickle as pkl
+import numpy as np
 import matplotlib.pyplot as plt
 from spatialmath import SE3
 from roboticstoolbox.models.URDF.Panda import Panda
@@ -175,6 +180,10 @@ def plot_convergence(robot, data, idx):
 
 
 def main():
+    """
+    Run the IK comparison experiments of Question report 1.3 on the SCARA and
+    Panda robots, print the success tables and errors, and plot convergence.
+    """
 
     # Import SCARA model
     models_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),

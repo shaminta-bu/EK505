@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" type="text/css" href="homework2.css">
+</head>
+<body>
+<h1>ek505_models.py</h1>
+<div class="highlight"><pre><span></span><span class="sd">'''</span>
+<span class="sd">Robot models (SCARA, cart-pole) and their hand-derived forward-kinematics functions.</span>
+<span class="sd">'''</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="kn">import</span> <span class="n">path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">roboticstoolbox.models.URDF.URDFRobot</span><span class="w"> </span><span class="kn">import</span> <span class="n">URDFRobot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">spatialmath</span><span class="w"> </span><span class="kn">import</span> <span class="n">SE3</span>
+
+<span class="n">_here</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">scara</span> <span class="o">=</span> <span class="n">URDFRobot</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_here</span><span class="p">,</span> <span class="s1">'scara.urdf'</span><span class="p">))</span>
+<span class="n">cartpole</span> <span class="o">=</span> <span class="n">URDFRobot</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_here</span><span class="p">,</span> <span class="s1">'cartpole.urdf'</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">scara_fkine</span><span class="p">(</span><span class="n">q_input</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">'''</span>
+<span class="sd">    Computes the forward kinematics of the SCARA robot by explicitly concatenating transformations</span>
+<span class="sd">    '''</span>
+
+    <span class="n">pose</span> <span class="o">=</span> <span class="p">(</span><span class="n">SE3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span> <span class="o">*</span> <span class="n">SE3</span><span class="o">.</span><span class="n">Rz</span><span class="p">(</span><span class="n">q_input</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="o">*</span> <span class="n">SE3</span><span class="p">(</span><span class="mf">0.92</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">)</span> <span class="o">*</span> <span class="n">SE3</span><span class="o">.</span><span class="n">Rz</span><span class="p">(</span><span class="n">q_input</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="o">*</span> <span class="n">SE3</span><span class="p">(</span><span class="mf">1.025</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.08</span> <span class="o">-</span> <span class="n">q_input</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="o">*</span> <span class="n">SE3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.46</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pose</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cartpole_fkine</span><span class="p">(</span><span class="n">q_input</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">'''</span>
+<span class="sd">    Computes the forward kinematics of the cart-pole robot by explicitly</span>
+<span class="sd">    concatenating transformations</span>
+<span class="sd">    '''</span>
+    <span class="n">pose</span> <span class="o">=</span> <span class="p">(</span><span class="n">SE3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">)</span> <span class="o">*</span> <span class="n">SE3</span><span class="o">.</span><span class="n">Tx</span><span class="p">(</span><span class="n">q_input</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="o">*</span> <span class="n">SE3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.28</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="n">SE3</span><span class="o">.</span><span class="n">Ry</span><span class="p">(</span><span class="n">q_input</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="o">*</span> <span class="n">SE3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pose</span>
+</pre></div>
+
+<h1>ek505_ik.py</h1>
+<div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pkl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">spatialmath</span><span class="w"> </span><span class="kn">import</span> <span class="n">SE3</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">roboticstoolbox.models.URDF.Panda</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panda</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ikine_comparison_test</span><span class="p">(</span><span class="n">robot</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">results_filename</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                          <span class="n">max_iters</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Run position-only inverse kinematics on a fixed set of target positions</span>
+<span class="sd">    using both the gradient descent solver from Question code 1.1 and the</span>
+<span class="sd">    Robotics Toolbox inverse kinematics method .ikine_LM. Save the results to</span>
+<span class="sd">    a results_filename pickle file.</span>
+
+<span class="sd">    targets is a nb_targets x 3 array, one target position per row.</span>
+<span class="sd">    """</span>
+
+    <span class="n">q0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">q0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">q_gradient</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">q_rtb</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">success_gradient</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">success_rtb</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">error_gradient</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">error_rtb</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">history_cost</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">history_joint</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Both methods must use the same tolerance on the position error norm ||e||.</span>
+    <span class="c1"># RTB's tol bounds E = 0.5*||e||^2 instead, so convert it:</span>
+    <span class="c1"># ||e|| &lt; tol  &lt;=&gt;  0.5*||e||^2 &lt; 0.5*tol^2  (e.g., 1 mm -&gt; 5e-7).</span>
+    <span class="n">tol_rtb</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">tol</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="k">for</span> <span class="n">p_des</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+        <span class="c1"># Run the gradient descent solver</span>
+        <span class="n">q_sol</span><span class="p">,</span> <span class="n">flag_status</span><span class="p">,</span> <span class="n">h_cost</span><span class="p">,</span> <span class="n">h_joint</span> <span class="o">=</span> <span class="n">ikine_position_gradient</span><span class="p">(</span>
+            <span class="n">robot</span><span class="p">,</span> <span class="n">p_des</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="n">step_size</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="n">max_iters</span><span class="p">,</span>
+            <span class="n">joint_limits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Run the Robotics Toolbox inverse kinematics solver. The first search</span>
+        <span class="c1"># starts from q0; later searches (restarts) use random configurations.</span>
+        <span class="n">iksol</span> <span class="o">=</span> <span class="n">robot</span><span class="o">.</span><span class="n">ikine_LM</span><span class="p">(</span><span class="n">SE3</span><span class="o">.</span><span class="n">Trans</span><span class="p">(</span><span class="n">p_des</span><span class="p">),</span> <span class="n">q0</span><span class="o">=</span><span class="n">q0</span><span class="p">,</span> <span class="n">ilimit</span><span class="o">=</span><span class="n">max_iters</span><span class="p">,</span>
+                               <span class="n">tol</span><span class="o">=</span><span class="n">tol_rtb</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                               <span class="n">joint_limits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">q_gradient</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q_sol</span><span class="p">)</span>
+        <span class="n">q_rtb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iksol</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="n">success_gradient</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag_status</span><span class="p">)</span>
+        <span class="n">success_rtb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">iksol</span><span class="o">.</span><span class="n">success</span><span class="p">))</span>
+        <span class="n">error_gradient</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">fkine</span><span class="p">(</span><span class="n">q_sol</span><span class="p">)</span><span class="o">.</span><span class="n">t</span> <span class="o">-</span> <span class="n">p_des</span><span class="p">))</span>
+        <span class="n">error_rtb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">fkine</span><span class="p">(</span><span class="n">iksol</span><span class="o">.</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">t</span> <span class="o">-</span> <span class="n">p_des</span><span class="p">))</span>
+        <span class="n">history_cost</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h_cost</span><span class="p">)</span>
+        <span class="n">history_joint</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h_joint</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"robot_name"</span><span class="p">:</span> <span class="n">robot</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"targets"</span><span class="p">:</span> <span class="n">targets</span><span class="p">,</span>
+        <span class="s2">"q0"</span><span class="p">:</span> <span class="n">q0</span><span class="p">,</span>
+        <span class="s2">"step_size"</span><span class="p">:</span> <span class="n">step_size</span><span class="p">,</span>
+        <span class="s2">"tol"</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+        <span class="s2">"tol_rtb"</span><span class="p">:</span> <span class="n">tol_rtb</span><span class="p">,</span>  <span class="c1"># tol converted to RTB's 0.5*||e||^2 error measure</span>
+        <span class="s2">"max_iters"</span><span class="p">:</span> <span class="n">max_iters</span><span class="p">,</span>
+        <span class="s2">"q_gradient"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">q_gradient</span><span class="p">),</span>
+        <span class="s2">"q_rtb"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">q_rtb</span><span class="p">),</span>
+        <span class="s2">"success_gradient"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">success_gradient</span><span class="p">),</span>
+        <span class="s2">"success_rtb"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">success_rtb</span><span class="p">),</span>
+        <span class="s2">"error_gradient"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">error_gradient</span><span class="p">),</span>
+        <span class="s2">"error_rtb"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">error_rtb</span><span class="p">),</span>
+        <span class="s2">"history_cost"</span><span class="p">:</span> <span class="n">history_cost</span><span class="p">,</span>    <span class="c1"># list of [nb_iterations] arrays, one per target</span>
+        <span class="s2">"history_joint"</span><span class="p">:</span> <span class="n">history_joint</span><span class="p">,</span>  <span class="c1"># list of [nb_iterations x n] arrays, one per target</span>
+    <span class="p">}</span>
+
+    <span class="n">results_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="n">results_filename</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_path</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pkl</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ikine_position_gradient</span><span class="p">(</span><span class="n">robot</span><span class="p">,</span> <span class="n">p_des</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                            <span class="n">joint_limits</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Compute a joint configuration whose end-effector position is close to a</span>
+<span class="sd">    desired target position by using gradient descent on the position error.</span>
+
+<span class="sd">    The update is q &lt;- q - step_size * Jp^T (p(q) - p_des), the gradient of</span>
+<span class="sd">    0.5*||p(q) - p_des||^2. history_cost stores the position error norm.</span>
+<span class="sd">    """</span>
+
+    <span class="n">q_sol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">q0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">history_cost</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">history_joint</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">joint_limits</span><span class="p">:</span>
+        <span class="n">qlims</span> <span class="o">=</span> <span class="n">robot</span><span class="o">.</span><span class="n">qlim</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">robot</span><span class="o">.</span><span class="n">fkine</span><span class="p">(</span><span class="n">q_sol</span><span class="p">)</span><span class="o">.</span><span class="n">t</span> <span class="o">-</span> <span class="n">p_des</span>
+        <span class="n">history_cost</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="n">history_joint</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q_sol</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">robot</span><span class="o">.</span><span class="n">jacob0</span><span class="p">(</span><span class="n">q_sol</span><span class="p">)[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">err</span>
+        <span class="n">q_sol</span> <span class="o">=</span> <span class="n">q_sol</span> <span class="o">-</span> <span class="n">step_size</span> <span class="o">*</span> <span class="n">grad</span>
+        <span class="k">if</span> <span class="n">joint_limits</span><span class="p">:</span>
+            <span class="n">q_sol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">q_sol</span><span class="p">,</span> <span class="n">qlims</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">qlims</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="n">flag_status</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">fkine</span><span class="p">(</span><span class="n">q_sol</span><span class="p">)</span><span class="o">.</span><span class="n">t</span> <span class="o">-</span> <span class="n">p_des</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q_sol</span><span class="p">,</span> <span class="n">flag_status</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">history_cost</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">history_joint</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">scara_targets</span><span class="p">(</span><span class="n">nb_targets</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Sample targets (nb_targets x 3) in a cylindrical shell around the SCARA base </span>
+<span class="sd">    with joint limits considered.</span>
+<span class="sd">    """</span>
+    <span class="n">r_min</span><span class="p">,</span> <span class="n">r_max</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.85</span>
+    <span class="n">z_min</span><span class="p">,</span> <span class="n">z_max</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.23</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">r_min</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">r_max</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">r_min</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nb_targets</span><span class="p">))</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nb_targets</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">z_min</span> <span class="o">+</span> <span class="p">(</span><span class="n">z_max</span> <span class="o">-</span> <span class="n">z_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nb_targets</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">z</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">panda_targets</span><span class="p">(</span><span class="n">nb_targets</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Sample targets (nb_targets x 3) in a box in front of the Panda</span>
+<span class="sd">    with joint limits considered.</span>
+<span class="sd">    """</span>
+    <span class="n">box_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+    <span class="n">box_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">box_min</span> <span class="o">+</span> <span class="p">(</span><span class="n">box_max</span> <span class="o">-</span> <span class="n">box_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nb_targets</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">categorize</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return boolean masks for the four success categories of Question report 1.3.</span>
+<span class="sd">    """</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"success_gradient"</span><span class="p">]</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"success_rtb"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"both succeed"</span><span class="p">:</span> <span class="n">g</span> <span class="o">&amp;</span> <span class="n">r</span><span class="p">,</span> <span class="s2">"gradient only"</span><span class="p">:</span> <span class="n">g</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">r</span><span class="p">,</span>
+            <span class="s2">"RTB only"</span><span class="p">:</span> <span class="o">~</span><span class="n">g</span> <span class="o">&amp;</span> <span class="n">r</span><span class="p">,</span> <span class="s2">"both fail"</span><span class="p">:</span> <span class="o">~</span><span class="n">g</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">r</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_convergence</span><span class="p">(</span><span class="n">robot</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Plot position error norm and joint values versus iteration for target idx,</span>
+<span class="sd">    with the RTB final solution shown as horizontal reference lines.</span>
+<span class="sd">    """</span>
+    <span class="n">h_cost</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"history_cost"</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">h_joint</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"history_joint"</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">q_rtb</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"q_rtb"</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax_err</span><span class="p">,</span> <span class="n">ax_q</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ax_err</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">h_cost</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Gradient descent"</span><span class="p">)</span>
+    <span class="n">ax_err</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"error_rtb"</span><span class="p">][</span><span class="n">idx</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">'C1'</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">'--'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"RTB final"</span><span class="p">)</span>
+    <span class="n">ax_err</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"tol"</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">'k'</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">':'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"tol"</span><span class="p">)</span>
+    <span class="n">ax_err</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Position error norm [m]"</span><span class="p">)</span>
+    <span class="n">ax_err</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">robot</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: target </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">'targets'</span><span class="p">][</span><span class="n">idx</span><span class="p">],</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">ax_err</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">ax_err</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">ax_q</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">h_joint</span><span class="p">[:,</span> <span class="n">j</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="sa">f</span><span class="s2">"C</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"q</span><span class="si">{</span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">ax_q</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">q_rtb</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="sa">f</span><span class="s2">"C</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">'--'</span><span class="p">)</span>
+    <span class="n">ax_q</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Iteration"</span><span class="p">)</span>
+    <span class="n">ax_q</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Joint value (solid: gradient, dashed: RTB)"</span><span class="p">)</span>
+    <span class="n">ax_q</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">ncol</span><span class="o">=</span><span class="n">robot</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">ax_q</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
+                             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">robot</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_convergence.png"</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+
+    <span class="c1"># Import SCARA model</span>
+    <span class="n">models_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
+                               <span class="s1">'..'</span><span class="p">,</span> <span class="s1">'staples'</span><span class="p">,</span> <span class="s1">'ek505_models.py'</span><span class="p">)</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">spec_from_file_location</span><span class="p">(</span><span class="s2">"models"</span><span class="p">,</span> <span class="n">models_path</span><span class="p">)</span>
+    <span class="n">models</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s2">"models"</span><span class="p">]</span> <span class="o">=</span> <span class="n">models</span>
+    <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">models</span><span class="p">)</span>
+    <span class="n">scara</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">scara</span>
+
+    <span class="c1"># Import Panda model</span>
+    <span class="n">panda</span> <span class="o">=</span> <span class="n">Panda</span><span class="p">()</span>
+
+    <span class="c1"># Assign variables for testing</span>
+    <span class="n">nb_targets</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Run tests</span>
+    <span class="k">for</span> <span class="n">robot</span><span class="p">,</span> <span class="n">sample_targets</span><span class="p">,</span> <span class="n">results_filename</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">scara</span><span class="p">,</span> <span class="n">scara_targets</span><span class="p">,</span> <span class="s2">"scara_ik_results.pkl"</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">panda</span><span class="p">,</span> <span class="n">panda_targets</span><span class="p">,</span> <span class="s2">"panda_ik_results.pkl"</span><span class="p">)]:</span>
+        <span class="n">q0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>  <span class="c1"># initial guess</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">sample_targets</span><span class="p">(</span><span class="n">nb_targets</span><span class="p">)</span>
+        <span class="n">ikine_comparison_test</span><span class="p">(</span><span class="n">robot</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">results_filename</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
+                               <span class="n">results_filename</span><span class="p">),</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pkl</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Success table</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">robot</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">categories</span> <span class="o">=</span> <span class="n">categorize</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">categories</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">14s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">nb_targets</span><span class="si">:</span><span class="s2">5.1f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+
+        <span class="c1"># Average final position error where both methods succeed</span>
+        <span class="n">both</span> <span class="o">=</span> <span class="n">categories</span><span class="p">[</span><span class="s2">"both succeed"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">both</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  avg final error gradient: </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">'error_gradient'</span><span class="p">][</span><span class="n">both</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  avg final error RTB:      </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">'error_rtb'</span><span class="p">][</span><span class="n">both</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
+
+        <span class="c1"># Convergence plots for one representative target (first where both succeed)</span>
+        <span class="k">if</span> <span class="n">both</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">plot_convergence</span><span class="p">(</span><span class="n">robot</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">both</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+</body>
+</html>
